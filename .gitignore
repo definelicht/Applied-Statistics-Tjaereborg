@@ -1,0 +1,13 @@
+# Tex-junk
+*.aux
+*.log
+*.out
+*.pdf
+*.synctex
+*.syntex.gz
+*(busy)
+
+# Compiled code
+bin/*
+*.o
+*.pyc
