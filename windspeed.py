@@ -1,5 +1,5 @@
 from __future__ import division
-import sys, numpy as np, read_csv
+import math, sys, numpy as np, read_csv
 from ROOT import TCanvas, TGraph, TGraphErrors, TMultiGraph, TLegend, TF1, TMath, TPad
 
 def ChisquareStats(fit):
@@ -63,7 +63,7 @@ for i in range(n_heights):
   # Plot raw data
   wind = np.array(windspeed[:,i])
   wind_fourier = np.fft.fft(wind)
-  next_power = int(ceil(log(n, 2)))
+  next_power = 2**(int(math.ceil(math.log(n, 2))))
   graph = TGraph(n,time,wind)
   graph.GetYaxis().SetRangeUser(wind_lim[0],wind_lim[1]+5)
   graph.SetLineColor(i+1)
@@ -87,7 +87,6 @@ mean_fit2.SetLineColor(8)
 mean_fit3.SetLineColor(9)
 graph_mean = TGraphErrors(n_heights,height,mean,np.zeros(n_heights),std)
 graph_mean.SetMarkerStyle(3)
-# graph_mean.SetMarkerColor(4)
 graph_mean.SetMarkerSize(3)
 graph_mean.SetTitle(";Height [m];Mean wind speed [m/s^{2}]")
 canvas_mean = TCanvas()
