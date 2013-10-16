@@ -1,0 +1,82 @@
+% MED UDGANGSPUNKT I ABSALON-FILEN:
+\documentclass[a4paper,%                                      A4 papir st�rrelse
+               reprint,%                                      preprint er mere overskueligt mens man skriver, reprint er det endelige format
+               aps,%                                          dokument f�r layout som givet af APS
+               prl,%                                          mere layout
+               amsfonts,%                                     load AMS fonts
+               amssymb,%                                      load flere AMS symboler
+               amsmath,%                                      load AMS matematik (equation environment osv.)
+              % nobibnotes,%                                   hvis man ikke bruger BibTeX b�r REVTeX f� at vide at den skal bruge normale fodnoter
+               twoside,%                                      to-sidet print
+               balancelastpage,%                              balancering af sidste side n�r der er to kolonner
+               eqsecnum]%                                     nummerering af ligninger med section
+               {revtex4-1}
+\def\andname{og}                                              % Omd�ber "and" fra REVTeX style filen til dansk "og" (fjern linie hvis I skriver p� engelsk)
+                    
+\usepackage[utf8x]{inputenc}
+\usepackage[english]{babel}   
+                                 % Kapitler mv. f�r rigtige navne til sproget (ret til english hvis I skriver p� engelsk)
+\usepackage[T1]{fontenc}                                      % Dansk tastatur
+
+\usepackage{graphicx}
+\setcounter{secnumdepth}{1}
+\usepackage{array}
+\usepackage{multirow}
+\usepackage{longtable}
+\usepackage{gensymb}
+\usepackage{url}
+\setlength{\parindent}{0pt}
+ % \usepackage[
+ % top    = 2.50cm,
+ % bottom = 2.50cm,
+ % left   = 1.5 cm,
+ % right  = 1.5 cm]{geometry}
+% Her s�tter I alle andre pakker I har brug for, f.eks. graphicx, xcolor, siunitx osv.
+
+\begin{document}                                         % Starter det egentlige dokument
+
+\title{Working title Tjæreborg}
+\date{\today}                                                 % Dato p� dokument, brug evt. bare \today
+\author{Johannes de Fine Licht}                                    % Forfatter p� artiklen (brug en ny \author{} kommando for hver forfatter)
+\author{Mads Holst Aagaard Madsen}  
+\author{Malte Lyndby Schmidt}       
+\affiliation{ \bf{ Applied statistics; Project 2}}                        % Forfatternes tilh�rsforhold
+
+\begin{abstract}                                              
+\input{abstract.tex}
+\end{abstract}
+
+\maketitle                                                    % Laver overskrift mm. for artiklen
+
+\section{Introduction}
+\label{sec:introduction}
+\input{introduction.tex}
+
+\section{Method}
+\label{sec:method}
+\input{method.tex}
+
+\section{Results}
+\label{sec:results}
+\input{results.tex}
+
+\section{Discussion}
+\label{sec:discussion}
+\input{discussion.tex}
+
+\section{conclusion}
+\label{sec:conclusion}
+\input{conclusion.tex}
+
+
+\begin{thebibliography}{99}                                   
+
+% Litteratur der kan henvises til - for at opdatere listen nedenfor skal bbl-filen slettes inden der compiles!
+  \bibitem{barlow} Roger J. Barlow; \emph{Statistics: a guide to the use of
+     statistical methods in the physical sciences}, (Wiley, 1989) 
+
+
+\end{thebibliography}
+
+
+\end{document}                                            
