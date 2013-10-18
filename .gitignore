@@ -11,3 +11,6 @@
 bin/*
 *.o
 *.pyc
+
+# vim swaps
+*.swp
