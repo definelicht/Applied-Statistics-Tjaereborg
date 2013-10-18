@@ -1,0 +1,74 @@
+The results are divided in two subsections just as the data: the \textbf{Anemometer} and the \textbf{Sonic Anemometer}.
+All plots and results will be discussed in the \textbf{Discussion}. The data analysis has been carried out twice: 
+once in Matlab \cite{matlab} (its fast) and once in Python \cite{python}/ ROOT \cite{root}. 
+The plots are from the latter except the Coherence plot, figure (\ref{fig:Coherence_ANE}).
+
+% RAW-data ---------------------------------------------------------------------------------------------------------------
+
+\subsection{Anemometer}
+In figure (\ref{fig:raw_ANE}) the raw data from the Anemometer along with the mean is plotted from six different heights. 
+
+\begin{figure}
+\centering
+\includegraphics[width=0.5\textwidth]{Figurer/rawANE.pdf}
+\caption{Raw signal data from all 6 heights measured with the Anemometer.}
+\label{fig:raw_ANE}
+\end{figure}
+
+% Coherence ----------------------------------------------------------------------------------------------------------
+
+To analyse the relation between Anemometers at different heights, we calculate the coherence between to Anemometers. An example is given in figure (\ref{fig:coherence_ANE}).
+
+\begin{figure}
+\centering
+\includegraphics[width=0.5\textwidth]{Figurer/coherenceANE.pdf}
+\caption{Coherence between 90 m and 57 m. The plot is normalised, which means the x-axis range is $[0 ; 1]$ instead of real frequencies in range $[0 \textrm{Hz} ; 17.5 \textrm{Hz}]$. In the figure only the lowest $1.5\%$ is plotted.}
+\label{fig:coherence_ANE}
+\end{figure}
+ 
+
+
+
+% Fourier ----------------------------------------------------------------------------------------------------------
+
+The data is then transformed, using a Fast Fourier Transformation, FFT, as shown in figure (\ref{fig:Fourier_ANE}).
+
+\begin{figure}
+\centering
+\includegraphics[width=0.5\textwidth]{Figurer/FourierANE.pdf}
+\caption{Fast Fourier Transformation of the rawdata from 6 heights.}
+\label{fig:Fourier_ANE}
+\end{figure}
+
+
+% Fourier FIT - figure and table -------------------------------------------------------------------------------------- 
+
+The data from figure (\ref{fig:Fourier_ANE}) is then plotted in a power spectrum with logarithmic axis  as in figure (\ref{fig:FourierFIT_ANE}), and fitted to a power function of the type; $f(x) = a \cdot x^{b}$. The resulting slope parameters, $b$, for all six heights are listed in table (\ref{tab:RES_ANE}).
+
+
+\begin{table}[htbp!]
+  \centering
+  \begin{tabular}{lrr}
+    \hline
+    \hline
+    Height           &$b$ value     &Uncertainty      \\
+    \hline
+    $90 $ m         &$1$ m      &$0.1\cdot 10^{-2}$ m       \\
+    $77 $ m          &$1$ m     &$0.1\cdot 10^{-2}$ m         \\
+    $57 $ m          &$1$ m     &$0.1\cdot 10^{-2}$ m         \\
+    $42 $ m          &$1$ m    &$0.1\cdot 10^{-2}$ m         \\
+    $28.5 $ m          &$1$ m      &$0.2\cdot 10^{-2}$ m         \\
+    $17 $ m          &$1$ m      &$0.2\cdot 10^{-2}$ m         \\
+    \hline
+    \hline
+  \end{tabular}
+  \caption{The fitted values for the slope parameter in the power spectrum along with the uncertainty.}
+  \label{tab:RES_ANE}
+\end{table}
+
+\begin{figure}
+\centering
+\includegraphics[width=0.5\textwidth]{Figurer/FourierFIT_ANE.pdf}
+\caption{Fit in a power spectrum from 1 height; 90 m.}
+\label{fig:FourierFIT_ANE}
+\end{figure}
