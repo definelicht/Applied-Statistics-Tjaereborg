@@ -1,4 +1,4 @@
-from ROOT import TCanvas, TGraph, TMath
+from ROOT import TCanvas, TGraph, TMath, SetOwnership
 from numpy import array
 
 # Usage: variable must be defined at caller, as in line = DrawLine(...)
@@ -11,6 +11,7 @@ def DrawLine(x1=0,x2=0,y1=0,y2=0,x=None,y=None,color=1,width=1,style=1):
   if y != None:
     y1 = y2 = y
   line = TGraph(2,array([x1,x2],dtype="float"),array([y1,y2],dtype="float"))
+  SetOwnership(line,False)
   SetLine(line,color=color,width=width,style=style)
   line.Draw("same")
   return line
