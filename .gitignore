@@ -2,7 +2,7 @@
 *.aux
 *.log
 *.out
-*.pdf
+#*.pdf
 *.synctex
 *.syntex.gz
 *(busy)
