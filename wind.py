@@ -22,7 +22,7 @@ class Measurement:
                     parent.power_cutoff[0],parent.power_cutoff[1])
     power_fit.SetParLimits(1,-5,5)
     power_fit.SetLineWidth(3)
-    power_graph = TGraph(parent.n,parent.fourier_x,self.fourier_y)
+    power_graph = TGraph(parent.n_fourier,parent.fourier_x,self.fourier_y)
     power_graph.Fit("powerfit%i"%id(self),"r")
     SetOwnership(power_graph,False)
     self.power_fit = power_fit
@@ -83,6 +83,7 @@ def draw_power_slopes(save=False):
 
   # Aggregate analysis
   mean = [np.mean(ane_slopes),np.mean(son_slopes),0]
+  error = [0,0,0]
   ane_error = 0
   son_error = 0
   for slope in ane_slopes: ane_error += (slope - mean[0])**2
@@ -91,7 +92,9 @@ def draw_power_slopes(save=False):
   son_error = son_error**0.5 / (son_n-1)
   ane_errors = ane_error*np.ones(ane_n,dtype="float")
   son_errors = son_error*np.ones(son_n,dtype="float")
-  (mean[2],error) = root_utilities.WeightedMean(
+  (mean[0],error[0]) = root_utilities.WeightedMean(ane_slopes,ane_errors)
+  (mean[1],error[1]) = root_utilities.WeightedMean(son_slopes,son_errors)
+  (mean[2],error[2]) = root_utilities.WeightedMean(
     np.concatenate((ane_slopes,son_slopes)),
     np.concatenate((ane_errors,son_errors))
   )
@@ -129,10 +132,10 @@ def draw_power_slopes(save=False):
   # Build legend
   line_legend = TLegend(0.5,0.1,0.9,0.9-0.5)
   line_legend.SetFillColor(0)
-  line_legend.AddEntry(lines[0],"Anemometer: %.2f"%mean[0],"L")
-  line_legend.AddEntry(lines[1],"Sonicmeter: %.2f"%mean[1],"L")
-  line_legend.AddEntry(lines[2],"Total: %.2f"%mean[2],"L")
-  line_legend.AddEntry(lines[3],"Theoretical: %.2f"%(-5/3),"L")
+  line_legend.AddEntry(lines[0],"%.2f #pm %.2f [Anemometer]"%(mean[0],error[0]),"L")
+  line_legend.AddEntry(lines[1],"%.2f #pm %.2f [Sonicmeter]"%(mean[1],error[1]),"L")
+  line_legend.AddEntry(lines[2],"%.2f #pm %.2f [Total]"%(mean[2],error[2]),"L")
+  line_legend.AddEntry(lines[3],"%.2f [Theoretical]"%(-5/3),"L")
   line_legend.SetLineColor(1)
   line_legend.Draw()
   point_legend = TLegend(0.5,0.7,0.9,0.9)
@@ -151,7 +154,7 @@ def draw_power_slopes(save=False):
 
   raw_input("Displaying graph. Press enter to continue.")
   if save:
-    canvas.SaveAs("plots/slopes.pdf")
+    canvas.SaveAs(plotfolder + "slopes" + extension)
 
 ################################################################################
 
@@ -163,23 +166,39 @@ def graph_rawdata(obj, line_color=4):
 
 ################################################################################
 
-def draw_rawdata(save=False):
+def draw_rawdata(save=False,sonic=False):
 
   # Setup
   multigraph = TMultiGraph()
   multigraph.SetTitle("Raw wind speed data;Time [s];Wind [m/s]")
   SetOwnership(multigraph,False)
   color = 1
-  legend = TLegend(0.8,0.7,0.95,0.95)
+  if sonic == True:
+    data = sonicmeter
+    legend = TLegend(0.7,0.7,0.95,0.93)
+    filename = plotfolder + "rawdata_sonic" + extension
+  else:
+    data = anemometer
+    legend = TLegend(0.7,0.6,0.95,0.93)
+    filename = plotfolder + "rawdata" + extension
+  legend.SetFillColor(0)
 
-  # Add each measurement for the anemometer
-  for measurement in anemometer.measurements:
+  # Add each measurement
+  graphs = []
+  legend_string = []
+  for measurement in data.measurements:
     graph = graph_rawdata(measurement,line_color=color)
     multigraph.Add(graph)
-    multigraph.Add(root_utilities.DrawLine(x1=anemometer.t_lim[0],
-        x2=anemometer.t_lim[1],y=measurement.mean,color=color,style=2,width=2))
-    legend.AddEntry(graph,"h = %.1fm"%measurement.height,"L")
+    multigraph.Add(root_utilities.DrawLine(x1=data.t_lim[0],
+        x2=data.t_lim[1],y=measurement.mean,color=1,style=2,width=2))
+    graphs.append(graph)
+    legend_string.append("#mu_{%.1fm} = %.2fm/s"
+                         % (measurement.height,measurement.mean))
     color += 1
+  i = len(graphs)-1
+  while i >= 0:
+    legend.AddEntry(graphs[i],legend_string[i],"L")
+    i -= 1
 
   # Draw
   canvas = TCanvas()
@@ -188,11 +207,12 @@ def draw_rawdata(save=False):
   legend.Draw()
 
   raw_input("Displaying graph. Press enter to continue.")
-  if save: canvas.SaveAs("plots/rawdata.pdf")
+  if save: canvas.SaveAs(filename)
 
 ################################################################################
 
-def draw_power(obj, secondary=None, fitcolor=7, discardcolor=4, save=False):
+def draw_power(obj, secondary=None, fitcolor=7, discardcolor=4, save=False,
+               sonic=False):
   i = 0
 
   # Values before fit range
@@ -254,8 +274,12 @@ def draw_power(obj, secondary=None, fitcolor=7, discardcolor=4, save=False):
   SetOwnership(canvas,False)
   canvas.SetLogx()
   canvas.SetLogy()
-  multigraph.SetTitle("Power spectrum for h = %.1fm;f [Hz];|Y(f)|^{2}"
-                      % obj.height)
+  if sonic == True:
+    device = "Sonicmeter"
+  else:
+    device = "Anemometer"
+  multigraph.SetTitle("%s power spectrum for h = %.1fm;f [Hz];|Y(f)|^{2}"
+                      % (device,obj.height))
   multigraph.Draw("AL")
 
   # Legends
@@ -269,7 +293,7 @@ def draw_power(obj, secondary=None, fitcolor=7, discardcolor=4, save=False):
   legend.Draw()
   legend_prob = TLegend(0.12,0.12,0.7,0.3)
   root_utilities.StealthyLegend(legend_prob)
-  legend_prob.AddEntry(obj.power_fit,"f(x) = %.2fx^{%.2f}" % 
+  legend_prob.AddEntry(obj.power_fit,"f(x) = %.2ex^{%.2f}" % 
                        (obj.power_fit.GetParameter(0),
                        obj.power_fit.GetParameter(1)),
                        "L")
@@ -278,49 +302,118 @@ def draw_power(obj, secondary=None, fitcolor=7, discardcolor=4, save=False):
   legend_prob.Draw()
 
   raw_input("Displaying graph. Press enter to continue.")
-  if save: canvas.SaveAs("plots/power.pdf")
+  if save:
+    if sonic == True:
+      name = "power_sonic"
+    else:
+      name = "power"
+    canvas.SaveAs(plotfolder + name + extension)
 
 ################################################################################
 
-def draw_fourier(obj,save=False):
+def graph_fourier(obj, color=4):
   x = obj.parent.fourier_x
   y = obj.fourier_y
-  n = len(x)
-  canvas = TCanvas()
-  SetOwnership(canvas,False)
+  n = obj.parent.n_fourier
   graph = TGraph(n,x,y)
+  graph.SetLineColor(color)
   SetOwnership(graph,False)
-  graph.Draw("AL")
-  raw_input("Displaying graph. Press enter to continue.")
-  if save: canvas.SaveAs("plots/fourier.pdf")
+  return graph
 
 ################################################################################
 
-def draw_height(save=False):
-
-  # Extract data
-  height = []
-  mean = []
-  std = []
-  for measurement in anemometer.measurements:
-    height.append(measurement.height)
-    mean.append(measurement.mean)
-    std.append(measurement.std)
-  n = len(mean)
-  height = np.array(height,dtype="float")
-  mean = np.array(mean,dtype="float")
-  std = np.array(std,dtype="float")
-
-  # Draw graph
+def draw_fourier(data, save=False, sonic=False, single=True):
   canvas = TCanvas()
   SetOwnership(canvas,False)
-  # graph = TGraph(n,height,mean)
-  graph = TGraphErrors(n,height,mean,np.zeros(n),std)
-  root_utilities.SetMarker(graph,color=2,style=4,size=2.5)
-  graph.SetLineColor(2)
-  SetOwnership(graph,False)
-  graph.SetTitle(";Height [m];Mean wind speed [m/s]")
-  graph.Draw("AP")
+  multigraph = TMultiGraph()
+  SetOwnership(multigraph,False)
+  color_step = int(len(colors) / data.n_heights)
+  c = 1
+  legend = TLegend(0.7,0.5,0.88,0.88)
+  root_utilities.StealthyLegend(legend)
+  if not single:
+    for m in data.measurements:
+      graph = graph_fourier(m,colors[c*color_step-1])
+      multigraph.Add(graph)
+      legend.AddEntry(graph,"h = %.1fm"%m.height,"L")
+      c += 1
+  else:
+    graph = graph_fourier(data.measurements[-1],colors[0])
+    multigraph.Add(graph)
+  x = data.fourier_x
+  y = data.measurements[-1].fourier_y
+  if sonic == True:
+    title = "Sonicmeter"
+  else:
+    title = "Anemometer"
+  title += " FFT"
+  multigraph.SetTitle("%s;f [Hz];|Y(f)|^{2}" % title)
+  multigraph.Draw("AL")
+  if not single: legend.Draw()
+  multigraph.GetXaxis().SetLimits(np.min(x),x[len(x)>>5])
+  multigraph.GetYaxis().SetRangeUser(0,y[len(y)>>10])
+  raw_input("Displaying graph. Press enter to continue.")
+  if sonic == True:
+    name = "fourier_sonic"
+  else:
+    name = "fourier"
+  if save: canvas.SaveAs(plotfolder + name + extension)
+
+################################################################################
+
+def fit_height(save=False,partitions=42,draw=True):
+
+  # Extract height
+  height = []
+  for m in anemometer.measurements: height.append(m.height)
+  n = len(height)
+  height = np.array(height,dtype="float")
+
+  # Partition data
+  x = np.zeros(n*partitions,dtype="float")
+  for i in range(n):
+    x[i*partitions:(i+1)*partitions] = height[i]
+  means = []
+  stds = []
+  y = []
+  e = []
+  for m in anemometer.measurements:
+    for i in range(partitions):
+      p = m.raw[i*partitions:(i+1)*partitions-1]
+      y.append(np.mean(p))
+      e.append(np.std(p))
+  y = np.array(y,dtype="float")
+  e = np.array(e,dtype="float")
+
+  # Calculate aggregate
+  mean = []
+  error = []
+  for i in range(n):
+    measurement = y[i*partitions:(i+1)*partitions]
+    mean.append(np.mean(measurement))
+    error.append(np.std(measurement) / partitions**0.5)
+  mean = np.array(mean,dtype="float")
+  error = np.array(error,dtype="float")
+
+  # Draw graph
+  if draw:
+    canvas = TCanvas()
+    SetOwnership(canvas,False)
+  graph_partition = TGraph(n*partitions,x,y)
+  graph_aggregate = TGraphErrors(n,height,mean,np.zeros(n),error)
+  root_utilities.SetMarker(graph_partition,color=2,style=8,size=0.5)
+  root_utilities.SetMarker(graph_aggregate,color=4,style=4,size=2)
+  graph_aggregate.SetLineWidth(2)
+  graph_partition.SetLineColor(2)
+  graph_aggregate.SetLineColor(4)
+  SetOwnership(graph_partition,False)
+  SetOwnership(graph_aggregate,False)
+  title = ";Height [m];Mean wind speed [m/s]"
+  graph_partition.SetTitle(title)
+  graph_aggregate.SetTitle(title)
+  if draw:
+    graph_partition.Draw("AP")
+    graph_aggregate.Draw("same P")
 
   # Fits
   fit_log = TF1("fit_log","[0]*log(([1]*x+[2]))")
@@ -331,9 +424,9 @@ def draw_height(save=False):
   fit_ref.FixParameter(0,mean[0])
   fit_ref.FixParameter(1,height[0])
   root_utilities.SetLine(fit_log,color=8,width=2)
-  root_utilities.SetLine(fit_ref,color=9,width=2)
-  graph.Fit("fit_log")
-  graph.Fit("fit_ref","+")
+  root_utilities.SetLine(fit_ref,color=9,width=2,style=2)
+  graph_aggregate.Fit("fit_log")
+  graph_aggregate.Fit("fit_ref","+")
 
   # Legend
   legend = TLegend(0.12,0.7,0.5,0.88)
@@ -349,29 +442,51 @@ def draw_height(save=False):
                   fit_ref.GetParameter(2)
                  ),"L")
   legend.SetLineColor(0)
-  legend.Draw()
+  if draw:
+    legend.Draw()
 
-  # Probability legend
+  # Point and probability legend
   prob_legend = TLegend(0.4,0.12,0.88,0.4)
   prob_legend.SetFillStyle(0)
   prob_legend.SetLineColor(0)
   fitstring_log = root_utilities.ChisquareString(fit_log)
   fitstring_ref = root_utilities.ChisquareString(fit_ref)
+  prob_legend.AddEntry(graph_partition,"Partition means","P")
+  prob_legend.AddEntry(graph_aggregate,"Averaged speed","PE")
   prob_legend.AddEntry(fit_log,fitstring_log,"L")
   prob_legend.AddEntry(fit_ref,fitstring_ref,"L")
   (_,_,prob_log) = root_utilities.ChisquareStats(fit_log)
   (_,_,prob_ref) = root_utilities.ChisquareStats(fit_ref)
-  prob_legend.Draw()
+  if draw:
+    prob_legend.Draw()
 
-  raw_input("Displaying graph. Press enter to continue.")
-  if save: canvas.SaveAs("plots/height.pdf")
+  if draw:
+    raw_input("Displaying graph. Press enter to continue.")
+    if save: canvas.SaveAs(plotfolder + "height" + extension)
+
+  return (prob_log,prob_ref)
 
 ################################################################################
 
-folder = "/Users/johannes/Dropbox/Applied Statistics/Project 2/Data/"
+def test_partitions():
+  partition = 0
+  p_max = 0
+  for i in range(1,100):
+    (p1,p2) = fit_height(partitions=i,draw=False)
+    s = np.mean([p1,p2])
+    if s > p_max:
+      p_max = s
+      partition = i
+  return (p_max,partition)
 
-anemometer = WindData(folder + "windspeed.data")
-sonicmeter = WindData(folder + "sonic.data")
+################################################################################
+
+datafolder = "/Users/johannes/Dropbox/Applied Statistics/Project 2/Data/"
+plotfolder = "/Users/johannes/Dropbox/Applied Statistics/Project 2/Rapport/Figurer/"
+extension = ".eps"
+
+anemometer = WindData(datafolder + "windspeed.data")
+sonicmeter = WindData(datafolder + "sonic.data")
 
 color_reg = []
 colors = []

@@ -16,6 +16,6 @@ sonic_file = open(folder + "sonic.data","w")
 sonic_file.write("t,h=17m,h=77m,h=90m")
 for i in range(lines):
   windspeed_file.write("\n%f,%f,%f,%f,%f,%f,%f" % (data[i,173],data[i,117],data[i,116],data[i,115],data[i,114],data[i,113],data[i,112]))
-  sonic_file.write("\n%f,%f,%f,%f" % (data[i,173],data[i,109],data[i,101],data[i,93]))
+  sonic_file.write("\n%f,%f,%f,%f" % (data[i,173],data[i,108],data[i,100],data[i,92]))
 windspeed_file.close()
 sonic_file.close()
